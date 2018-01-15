@@ -13,12 +13,10 @@ window.onload = function () {
 		var cellData, cellTemp, cellWthr;
 		// create table header
 
-		var weather_table = new Array();
-		weather_table.push(['Date', 'Temperature', 'Weather']);
+		var weather_table = new Array(['Date', 'Temperature', 'Weather']);
 
 		// create table body
 		for (let i = 0; i < textjson.list.length; i++) {
-			console.log('process data set: ' + i);
 			weather_table.push([
 				textjson.list[i].dt_txt,
 				convertToCelsia(textjson.list[i].main.temp),
@@ -30,33 +28,14 @@ window.onload = function () {
 		var weather_table_div = document.getElementById("weathertable");
 		for (var i = 0; i < weather_table.length; i++){
 			weather_table_div.innerHTML += '<div id="weather" class = "row">';
-			for (var j = 0; j < 3; j++) {
-				weather_table_div.innerHTML += '<div class="col-md-4 tabl-head">' + weather_table[i][j] + '</div>';
-			}
+			weather_table_div.innerHTML += '	<div class="col-md-4 tabl-head">' + weather_table[i][0] + '</div>';
+			weather_table_div.innerHTML += '	<div class="col-md-4 tabl-head">' + weather_table[i][1] + '</div>';
+			weather_table_div.innerHTML += '	<div class="col-md-4 tabl-head">' + weather_table[i][2] + '</div>';
 			weather_table_div.innerHTML += '</div>';
 		}
-
 	};
 
     btn.addEventListener("click", function() {
 		createTable();
     }); 
 }
-
-/*
-			div.className = 'col-md-4';
-			document.getElementById('weather').appendChild(div);
-			cellData[i] = document.getElementsByClassName('col-md-4')[i+j1];
-			div = document.createElement('div');
-			div.className = 'col-md-4';
-			document.getElementById('weather').appendChild(div);
-			cellTemp[i] = document.getElementsByClassName('col-md-4')[i+j1+1];
-			div = document.createElement('div');
-			div.className = 'col-md-4';
-			document.getElementById('weather').appendChild(div);	
-			cellWthr[i] = document.getElementsByClassName('col-md-4')[i+j1+2];
-			j1 = j1*2; 
-						cellData.innerHTML = textjson.list[i].dt_txt;
-			cellTemp.innerHTML = convertToCelsia(textjson.list[i].main.temp);
-			cellWthr.innerHTML = textjson.list[i].weather[0].main;
-*/
