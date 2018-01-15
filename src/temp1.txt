@@ -1,0 +1,280 @@
+<div id="header">
+  <H1>Get weather for you city</H1>
+  <span id="lat">0</span>
+  <span id="lng">0</span>
+</div>
+
+<div id="mapholder">
+  <input 
+    id="pac-input"
+    class="controls" 
+    type="text"
+    placeholder="Enter a location">
+
+  <div id="type-selector" class="controls">
+    <input type="radio" name="type" id="changetype-all" checked="checked">
+    <label for="changetype-all">All</label>
+
+    <input type="radio" name="type" id="changetype-establishment">
+    <label for="changetype-establishment">Establishments</label>
+
+    <input type="radio" name="type" id="changetype-address">
+    <label for="changetype-address">Addresses</label>
+
+    <input type="radio" name="type" id="changetype-geocode">
+    <label for="changetype-geocode">Geocodes</label>
+  </div>
+  <div id="map"></div>
+</div>
+
+<div id="weathertable" class="container">
+  <div id="weather" class = "row">
+  <p id="respons">0</p>
+    <div class="col-md-4 tabl-head">Date</div>
+		<div class="col-md-4 tabl-head">Temperature (Celsium)</div>
+		<div class="col-md-4 tabl-head">Weather condition</div>
+		<div class="col-md-4">1</div>
+		<div class="col-md-4">2</div>
+		<div class="col-md-4">3</div>
+		<div class="col-md-4">1</div>
+		<div class="col-md-4">2</div>
+		<div class="col-md-4">3</div>
+  </div>
+  
+</div>
+<div id="footer">
+    GAK Corporation
+</div>
+
+<!-- Replace the value of the key parameter with your own API key. -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCkUOdZ5y7hMm0yrcCQoCvLwzdM6M8s5qk&libraries=places&callback=initMap"
+        async defer></script>
+
+
+		// This example requires the Places library. Include the libraries=places
+// parameter when you first load the API. For example:
+// <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&libraries=places">
+
+function initMap() {
+  var map = new google.maps.Map(document.getElementById('map'), {
+    center: {lat: -33.8688, lng: 151.2195},
+    zoom: 13
+  });
+  var input = /** @type {!HTMLInputElement} */(
+      document.getElementById('pac-input'));
+
+  var types = document.getElementById('type-selector');
+  map.controls[google.maps.ControlPosition.TOP_LEFT].push(input);
+  map.controls[google.maps.ControlPosition.TOP_LEFT].push(types);
+
+  var autocomplete = new google.maps.places.Autocomplete(input);
+  autocomplete.bindTo('bounds', map);
+
+  var infowindow = new google.maps.InfoWindow();
+  var marker = new google.maps.Marker({
+    map: map,
+    anchorPoint: new google.maps.Point(0, -29)
+  });
+
+  autocomplete.addListener('place_changed', function() {
+    infowindow.close();
+    marker.setVisible(false);
+    var place = autocomplete.getPlace();
+    if (!place.geometry) {
+      // User entered the name of a Place that was not suggested and
+      // pressed the Enter key, or the Place Details request failed.
+      window.alert("No details available for input: '" + place.name + "'");
+      return;
+    }
+
+    // If the place has a geometry, then present it on a map.
+    if (place.geometry.viewport) {
+      map.fitBounds(place.geometry.viewport);
+    } else {
+      map.setCenter(place.geometry.location);
+      map.setZoom(17);  // Why 17? Because it looks good.
+    }
+    marker.setIcon(/** @type {google.maps.Icon} */({
+      url: place.icon,
+      size: new google.maps.Size(71, 71),
+      origin: new google.maps.Point(0, 0),
+      anchor: new google.maps.Point(17, 34),
+      scaledSize: new google.maps.Size(35, 35)
+    }));
+    marker.setPosition(place.geometry.location);
+    
+    // koordinati
+    var latitude = place.geometry.location.lat();
+    var longitude = "&lon=" + place.geometry.location.lng();
+    var $response = document.getElementById("respons");
+		var url_api = "https://api.openweathermap.org/data/2.5/forecast?lat=";
+    var api_key = "&APPID=297a0b8a76e7182b40195cb9d20ab107";
+    
+
+    // na pogodni server
+    function start (){
+        var xhr = new XMLHttpRequest();
+        xhr.timeout = 2000;
+        xhr.onreadystatechange = function(e){
+            console.log(this);
+            if (xhr.readyState === 4){
+                if (xhr.status === 200){
+                    // debugger;
+                    // console.log(xhr.response);
+                    $response.innerHTML = xhr.response;
+                } else {
+                    console.error("XHR didn't work: ", xhr.status);
+                }
+            }
+        };
+        xhr.ontimeout = function (){
+            console.error("request timedout: ", xhr);
+        };
+        
+       // xhr.open("get", "https://api.openweathermap.org/data/2.5/forecast?lat=37&lon=55&APPID=297a0b8a76e7182b40195cb9d20ab107", true);
+     		xhr.open("get", url_api + latitude + longitude + api_key, true);
+        // xhr.responseType = "text";
+        xhr.send();
+    };
+    
+    start ();
+    
+    
+    // razobrat json
+    
+    
+    // sformirovt tablicu
+    
+    
+    // vivesty resultat
+    
+    
+    
+    marker.setVisible(true);
+
+    var address = '';
+    if (place.address_components) {
+      address = [
+        (place.address_components[0] && place.address_components[0].short_name || ''),
+        (place.address_components[1] && place.address_components[1].short_name || ''),
+        (place.address_components[2] && place.address_components[2].short_name || '')
+      ].join(' ');
+    }
+
+    infowindow.setContent('<div><strong>' + place.name + '</strong><br>' + address);
+    infowindow.open(map, marker);
+        
+    document.getElementById('lat').innerHTML = 'Широта ' + address +' = ' + latitude;
+    document.getElementById('lng').innerHTML = 'Долгота ' + address +' = ' + longitude;
+ 
+  });
+
+  // Sets a listener on a radio button to change the filter type on Places
+  // Autocomplete.
+  function setupClickListener(id, types) {
+    var radioButton = document.getElementById(id);
+    radioButton.addEventListener('click', function() {
+      autocomplete.setTypes(types);
+    });
+  }
+
+  setupClickListener('changetype-all', []);
+  setupClickListener('changetype-address', ['address']);
+  setupClickListener('changetype-establishment', ['establishment']);
+  setupClickListener('changetype-geocode', ['geocode']);
+}
+
+
+
+
+
+/* Always set the map height explicitly to define the size of the div
+ * element that contains the map. */
+#map {
+  height: 100%;
+}
+#header {
+    text-align: center;
+    margin: 20px;
+}
+#mapholder {
+  height: 100%;
+  width: 100%;
+}
+#weathertable {
+  
+}
+#weather {
+  
+}
+#footer {
+  text-align: center;
+}
+
+.col-md-4 {
+	border: 1px solid blue;
+	padding: 10px;
+}
+
+.tabl-head {
+  margin-top: 10px;
+	font-size: 1.3em;
+	text-align: center;
+	background-color: #b0dcfe
+}
+
+/* Optional: Makes the sample page fill the window. */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+.controls {
+  margin-top: 10px;
+  border: 1px solid transparent;
+  border-radius: 2px 0 0 2px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  height: 32px;
+  outline: none;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+#pac-input {
+  background-color: #fff;
+  font-family: Roboto;
+  font-size: 15px;
+  font-weight: 300;
+  margin-left: 12px;
+  padding: 0 11px 0 13px;
+  text-overflow: ellipsis;
+  width: 300px;
+}
+
+#pac-input:focus {
+  border-color: #4d90fe;
+}
+
+.pac-container {
+  font-family: Roboto;
+}
+
+#type-selector {
+  color: #fff;
+  background-color: #4d90fe;
+  padding: 5px 11px 0px 11px;
+}
+
+#type-selector label {
+  font-family: Roboto;
+  font-size: 13px;
+  font-weight: 300;
+}
+
+
+
+
+{"cod":"200","message":0.0025,"cnt":40,"list":[{"dt":1515844800,"main":{"temp":269.23,"temp_min":268.982,"temp_max":269.23,"pressure":1040.73,"sea_level":1049.1,"grnd_level":1040.73,"humidity":74,"temp_kf":0.25},
+"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01d"}],
+"clouds":{"all":12},"wind":{"speed":7.24,"deg":60.0046},"snow":{"3h":0.001},"sys":{"pod":"d"},
+"dt_txt":"2018-01-13 12:00:00"},{"dt":1515855600,"main":{"temp":267.79,"temp_min":267.596,"temp_max":267.79,"pressure":1041.43,"sea_level":1049.93,"grnd_level":1041.43,"humidity":66,"temp_kf":0.19},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01n"}],"clouds":{"all":56},"wind":{"speed":7.29,"deg":63.0029},"snow":{"3h":0.024},"sys":{"pod":"n"},"dt_txt":"2018-01-13 15:00:00"},{"dt":1515866400,"main":{"temp":267.12,"temp_min":266.994,"temp_max":267.12,"pressure":1041.53,"sea_level":1050.09,"grnd_level":1041.53,"humidity":65,"temp_kf":0.13},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13n"}],"clouds":{"all":68},"wind":{"speed":7.11,"deg":70.0006},"snow":{"3h":0.034},"sys":{"pod":"n"},"dt_txt":"2018-01-13 18:00:00"},{"dt":1515877200,"main":{"temp":266.82,"temp_min":266.755,"temp_max":266.82,"pressure":1040.86,"sea_level":1049.49,"grnd_level":1040.86,"humidity":66,"temp_kf":0.06},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13n"}],"clouds":{"all":64},"wind":{"speed":7.31,"deg":73.5051},"snow":{"3h":0.031},"sys":{"pod":"n"},"dt_txt":"2018-01-13 21:00:00"},{"dt":1515888000,"main":{"temp":266.414,"temp_min":266.414,"temp_max":266.414,"pressure":1040.15,"sea_level":1048.73,"grnd_level":1040.15,"humidity":68,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13n"}],"clouds":{"all":68},"wind":{"speed":7.55,"deg":71.0009},"snow":{"3h":0.039},"sys":{"pod":"n"},"dt_txt":"2018-01-14 00:00:00"},{"dt":1515898800,"main":{"temp":265.219,"temp_min":265.219,"temp_max":265.219,"pressure":1039.49,"sea_level":1048.15,"grnd_level":1039.49,"humidity":64,"temp_kf":0},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01n"}],"clouds":{"all":32},"wind":{"speed":7.72,"deg":69.0009},"snow":{"3h":0.02225},"sys":{"pod":"n"},"dt_txt":"2018-01-14 03:00:00"},{"dt":1515909600,"main":{"temp":264.034,"temp_min":264.034,"temp_max":264.034,"pressure":1039.34,"sea_level":1048.02,"grnd_level":1039.34,"humidity":60,"temp_kf":0},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01d"}],"clouds":{"all":12},"wind":{"speed":8.16,"deg":69.0007},"snow":{"3h":0.00625},"sys":{"pod":"d"},"dt_txt":"2018-01-14 06:00:00"},{"dt":1515920400,"main":{"temp":265.879,"temp_min":265.879,"temp_max":265.879,"pressure":1038.57,"sea_level":1047.06,"grnd_level":1038.57,"humidity":70,"temp_kf":0},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01d"}],"clouds":{"all":0},"wind":{"speed":8.86,"deg":71.5012},"snow":{},"sys":{"pod":"d"},"dt_txt":"2018-01-14 09:00:00"},{"dt":1515931200,"main":{"temp":266.917,"temp_min":266.917,"temp_max":266.917,"pressure":1036.99,"sea_level":1045.49,"grnd_level":1036.99,"humidity":69,"temp_kf":0},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01d"}],"clouds":{"all":0},"wind":{"speed":9.31,"deg":68.5072},"snow":{},"sys":{"pod":"d"},"dt_txt":"2018-01-14 12:00:00"},{"dt":1515942000,"main":{"temp":265.382,"temp_min":265.382,"temp_max":265.382,"pressure":1037.41,"sea_level":1046.01,"grnd_level":1037.41,"humidity":63,"temp_kf":0},"weather":[{"id":802,"main":"Clouds","description":"scattered clouds","icon":"03n"}],"clouds":{"all":36},"wind":{"speed":8.61,"deg":69.5004},"snow":{},"sys":{"pod":"n"},"dt_txt":"2018-01-14 15:00:00"},{"dt":1515952800,"main":{"temp":264.461,"temp_min":264.461,"temp_max":264.461,"pressure":1037.42,"sea_level":1046.06,"grnd_level":1037.42,"humidity":63,"temp_kf":0},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01n"}],"clouds":{"all":80},"wind":{"speed":8.71,"deg":73.0033},"snow":{"3h":0.01},"sys":{"pod":"n"},"dt_txt":"2018-01-14 18:00:00"},{"dt":1515963600,"main":{"temp":264.258,"temp_min":264.258,"temp_max":264.258,"pressure":1037.17,"sea_level":1045.74,"grnd_level":1037.17,"humidity":64,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13n"}],"clouds":{"all":80},"wind":{"speed":8.41,"deg":75.5079},"snow":{"3h":0.045},"sys":{"pod":"n"},"dt_txt":"2018-01-14 21:00:00"},{"dt":1515974400,"main":{"temp":263.837,"temp_min":263.837,"temp_max":263.837,"pressure":1036.84,"sea_level":1045.4,"grnd_level":1036.84,"humidity":61,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13n"}],"clouds":{"all":88},"wind":{"speed":8.4,"deg":78.0002},"snow":{"3h":0.0325},"sys":{"pod":"n"},"dt_txt":"2018-01-15 00:00:00"},{"dt":1515985200,"main":{"temp":263.67,"temp_min":263.67,"temp_max":263.67,"pressure":1036.5,"sea_level":1045.21,"grnd_level":1036.5,"humidity":67,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13n"}],"clouds":{"all":92},"wind":{"speed":8.52,"deg":80.5},"snow":{"3h":0.185},"sys":{"pod":"n"},"dt_txt":"2018-01-15 03:00:00"},{"dt":1515996000,"main":{"temp":263.851,"temp_min":263.851,"temp_max":263.851,"pressure":1037.06,"sea_level":1045.62,"grnd_level":1037.06,"humidity":66,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13d"}],"clouds":{"all":88},"wind":{"speed":7.96,"deg":85.001},"snow":{"3h":0.9375},"sys":{"pod":"d"},"dt_txt":"2018-01-15 06:00:00"},{"dt":1516006800,"main":{"temp":264.868,"temp_min":264.868,"temp_max":264.868,"pressure":1036.8,"sea_level":1045.33,"grnd_level":1036.8,"humidity":76,"temp_kf":0},"weather":[{"id":601,"main":"Snow","description":"snow","icon":"13d"}],"clouds":{"all":92},"wind":{"speed":7.72,"deg":90.5016},"snow":{"3h":2.57},"sys":{"pod":"d"},"dt_txt":"2018-01-15 09:00:00"},{"dt":1516017600,"main":{"temp":266.124,"temp_min":266.124,"temp_max":266.124,"pressure":1036.18,"sea_level":1044.6,"grnd_level":1036.18,"humidity":78,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13d"}],"clouds":{"all":88},"wind":{"speed":7.36,"deg":94.5015},"snow":{"3h":0.985},"sys":{"pod":"d"},"dt_txt":"2018-01-15 12:00:00"},{"dt":1516028400,"main":{"temp":267.201,"temp_min":267.201,"temp_max":267.201,"pressure":1035.76,"sea_level":1044.32,"grnd_level":1035.76,"humidity":85,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13n"}],"clouds":{"all":88},"wind":{"speed":7.42,"deg":98.0007},"snow":{"3h":0.3525},"sys":{"pod":"n"},"dt_txt":"2018-01-15 15:00:00"},{"dt":1516039200,"main":{"temp":269.244,"temp_min":269.244,"temp_max":269.244,"pressure":1035.28,"sea_level":1043.8,"grnd_level":1035.28,"humidity":83,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13n"}],"clouds":{"all":88},"wind":{"speed":6.91,"deg":119.503},"snow":{"3h":0.6475},"sys":{"pod":"n"},"dt_txt":"2018-01-15 18:00:00"},{"dt":1516050000,"main":{"temp":269.85,"temp_min":269.85,"temp_max":269.85,"pressure":1035.34,"sea_level":1043.81,"grnd_level":1035.34,"humidity":97,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13n"}],"clouds":{"all":56},"wind":{"speed":4.91,"deg":137.504},"snow":{"3h":0.27},"sys":{"pod":"n"},"dt_txt":"2018-01-15 21:00:00"},{"dt":1516060800,"main":{"temp":268.607,"temp_min":268.607,"temp_max":268.607,"pressure":1035.17,"sea_level":1043.66,"grnd_level":1035.17,"humidity":99,"temp_kf":0},"weather":[{"id":802,"main":"Clouds","description":"scattered clouds","icon":"03n"}],"clouds":{"all":44},"wind":{"speed":4.26,"deg":125.001},"snow":{},"sys":{"pod":"n"},"dt_txt":"2018-01-16 00:00:00"},{"dt":1516071600,"main":{"temp":268.559,"temp_min":268.559,"temp_max":268.559,"pressure":1034.51,"sea_level":1042.89,"grnd_level":1034.51,"humidity":95,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13n"}],"clouds":{"all":76},"wind":{"speed":4.25,"deg":122.001},"snow":{"3h":0.305},"sys":{"pod":"n"},"dt_txt":"2018-01-16 03:00:00"},{"dt":1516082400,"main":{"temp":268.35,"temp_min":268.35,"temp_max":268.35,"pressure":1034.08,"sea_level":1042.45,"grnd_level":1034.08,"humidity":89,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13d"}],"clouds":{"all":92},"wind":{"speed":5.66,"deg":114.501},"snow":{"3h":0.3825},"sys":{"pod":"d"},"dt_txt":"2018-01-16 06:00:00"},{"dt":1516093200,"main":{"temp":269.547,"temp_min":269.547,"temp_max":269.547,"pressure":1033.14,"sea_level":1041.5,"grnd_level":1033.14,"humidity":92,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13d"}],"clouds":{"all":80},"wind":{"speed":5.52,"deg":113.5},"snow":{"3h":0.325},"sys":{"pod":"d"},"dt_txt":"2018-01-16 09:00:00"},{"dt":1516104000,"main":{"temp":270.545,"temp_min":270.545,"temp_max":270.545,"pressure":1031.33,"sea_level":1039.62,"grnd_level":1031.33,"humidity":92,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13d"}],"clouds":{"all":12},"wind":{"speed":5.01,"deg":105.501},"snow":{"3h":0.0325},"sys":{"pod":"d"},"dt_txt":"2018-01-16 12:00:00"},{"dt":1516114800,"main":{"temp":268.246,"temp_min":268.246,"temp_max":268.246,"pressure":1030.02,"sea_level":1038.38,"grnd_level":1030.02,"humidity":85,"temp_kf":0},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01n"}],"clouds":{"all":0},"wind":{"speed":5.71,"deg":105.503},"snow":{},"sys":{"pod":"n"},"dt_txt":"2018-01-16 15:00:00"},{"dt":1516125600,"main":{"temp":266.97,"temp_min":266.97,"temp_max":266.97,"pressure":1028.31,"sea_level":1036.8,"grnd_level":1028.31,"humidity":90,"temp_kf":0},"weather":[{"id":802,"main":"Clouds","description":"scattered clouds","icon":"03n"}],"clouds":{"all":48},"wind":{"speed":6.16,"deg":111.001},"snow":{},"sys":{"pod":"n"},"dt_txt":"2018-01-16 18:00:00"},{"dt":1516136400,"main":{"temp":267.007,"temp_min":267.007,"temp_max":267.007,"pressure":1026.44,"sea_level":1034.79,"grnd_level":1026.44,"humidity":89,"temp_kf":0},"weather":[{"id":803,"main":"Clouds","description":"broken clouds","icon":"04n"}],"clouds":{"all":56},"wind":{"speed":6.31,"deg":109.507},"snow":{},"sys":{"pod":"n"},"dt_txt":"2018-01-16 21:00:00"},{"dt":1516147200,"main":{"temp":267.001,"temp_min":267.001,"temp_max":267.001,"pressure":1024.35,"sea_level":1032.79,"grnd_level":1024.35,"humidity":89,"temp_kf":0},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01n"}],"clouds":{"all":36},"wind":{"speed":7.07,"deg":108.003},"snow":{"3h":0.0049999999999999},"sys":{"pod":"n"},"dt_txt":"2018-01-17 00:00:00"},{"dt":1516158000,"main":{"temp":267.48,"temp_min":267.48,"temp_max":267.48,"pressure":1022.8,"sea_level":1031.13,"grnd_level":1022.8,"humidity":90,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13n"}],"clouds":{"all":80},"wind":{"speed":7.27,"deg":114.502},"snow":{"3h":0.1375},"sys":{"pod":"n"},"dt_txt":"2018-01-17 03:00:00"},{"dt":1516168800,"main":{"temp":268.688,"temp_min":268.688,"temp_max":268.688,"pressure":1020.83,"sea_level":1029.15,"grnd_level":1020.83,"humidity":89,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13d"}],"clouds":{"all":92},"wind":{"speed":7.45,"deg":114.504},"snow":{"3h":0.1625},"sys":{"pod":"d"},"dt_txt":"2018-01-17 06:00:00"},{"dt":1516179600,"main":{"temp":271.116,"temp_min":271.116,"temp_max":271.116,"pressure":1018.78,"sea_level":1027,"grnd_level":1018.78,"humidity":93,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13d"}],"clouds":{"all":92},"wind":{"speed":7.27,"deg":119.501},"snow":{"3h":0.165},"sys":{"pod":"d"},"dt_txt":"2018-01-17 09:00:00"},{"dt":1516190400,"main":{"temp":272.888,"temp_min":272.888,"temp_max":272.888,"pressure":1016.22,"sea_level":1024.29,"grnd_level":1016.22,"humidity":92,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13d"}],"clouds":{"all":92},"wind":{"speed":7.17,"deg":116.503},"snow":{"3h":0.3975},"sys":{"pod":"d"},"dt_txt":"2018-01-17 12:00:00"},{"dt":1516201200,"main":{"temp":272.646,"temp_min":272.646,"temp_max":272.646,"pressure":1014.71,"sea_level":1022.91,"grnd_level":1014.71,"humidity":91,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13n"}],"clouds":{"all":80},"wind":{"speed":8.01,"deg":115.001},"snow":{"3h":0.225},"sys":{"pod":"n"},"dt_txt":"2018-01-17 15:00:00"},{"dt":1516212000,"main":{"temp":271.213,"temp_min":271.213,"temp_max":271.213,"pressure":1013.15,"sea_level":1021.3,"grnd_level":1013.15,"humidity":89,"temp_kf":0},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01n"}],"clouds":{"all":44},"wind":{"speed":8.66,"deg":112.003},"snow":{"3h":0.0175},"sys":{"pod":"n"},"dt_txt":"2018-01-17 18:00:00"},{"dt":1516222800,"main":{"temp":271.255,"temp_min":271.255,"temp_max":271.255,"pressure":1010.93,"sea_level":1019.09,"grnd_level":1010.93,"humidity":94,"temp_kf":0},"weather":[{"id":800,"main":"Clear","description":"clear sky","icon":"01n"}],"clouds":{"all":76},"wind":{"speed":8.96,"deg":112.012},"snow":{"3h":0.0025000000000013},"sys":{"pod":"n"},"dt_txt":"2018-01-17 21:00:00"},{"dt":1516233600,"main":{"temp":272.053,"temp_min":272.053,"temp_max":272.053,"pressure":1008.89,"sea_level":1016.99,"grnd_level":1008.89,"humidity":92,"temp_kf":0},"weather":[{"id":803,"main":"Clouds","description":"broken clouds","icon":"04n"}],"clouds":{"all":68},"wind":{"speed":9.26,"deg":112},"snow":{},"sys":{"pod":"n"},"dt_txt":"2018-01-18 00:00:00"},{"dt":1516244400,"main":{"temp":272.703,"temp_min":272.703,"temp_max":272.703,"pressure":1006.73,"sea_level":1014.79,"grnd_level":1006.73,"humidity":93,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13n"}],"clouds":{"all":92},"wind":{"speed":9.27,"deg":112.501},"snow":{"3h":0.175},"sys":{"pod":"n"},"dt_txt":"2018-01-18 03:00:00"},{"dt":1516255200,"main":{"temp":273.387,"temp_min":273.387,"temp_max":273.387,"pressure":1004.74,"sea_level":1012.74,"grnd_level":1004.74,"humidity":90,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13d"}],"clouds":{"all":92},"wind":{"speed":10.12,"deg":111.503},"snow":{"3h":0.325},"sys":{"pod":"d"},"dt_txt":"2018-01-18 06:00:00"},{"dt":1516266000,"main":{"temp":274.055,"temp_min":274.055,"temp_max":274.055,"pressure":1002.91,"sea_level":1010.88,"grnd_level":1002.91,"humidity":93,"temp_kf":0},"weather":[{"id":600,"main":"Snow","description":"light snow","icon":"13d"}],"clouds":{"all":92},"wind":{"speed":10.61,"deg":111.501},"snow":{"3h":0.865},"sys":{"pod":"d"},"dt_txt":"2018-01-18 09:00:00"}],"city":{"id":484907,"name":"Taganrog","coord":{"lat":47.2362,"lon":38.8969},"country":"RU","population":279056}}
