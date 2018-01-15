@@ -31,8 +31,8 @@ window.onload = function() {
         // xhr.responseType = "text";
         xhr.send();
 
-        jsontext = JSON.parse(xhr.response);
-        document.getElementById('pars').innerHTML = jsontext.main.temp_min;
+        jsontext = JSON.parse(xhr.response) + ']';
+        document.getElementById('pars').innerHTML = jsontext.list.main.temp;
     };
    
     btn.addEventListener("click", function() {
